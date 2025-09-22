@@ -1,37 +1,39 @@
 # Nginx Proxy Manager - Local Development Setup
 
-This is a simplified HTTP-only reverse proxy container for local development environments.
+This is a simplified HTTP-only reverse proxy container for local development environments based on nginx-proxy-manager.
+
+![Admin Interface](https://github.com/user-attachments/assets/adce1eb2-a2a6-4c43-a620-44f145840d53)
 
 ## Features
 
-- HTTP-only (no SSL/encryption) - perfect for local development
-- Simple nginx-based reverse proxy
-- Easy configuration through docker-compose
-- No database dependencies
-- Minimal resource usage
+- ✅ HTTP-only (no SSL/encryption) - perfect for local development
+- ✅ Simple nginx-based reverse proxy
+- ✅ Easy configuration through docker-compose
+- ✅ Volume-mounted configuration for custom proxy rules
+- ✅ No database dependencies
+- ✅ Minimal resource usage
+- ❌ No web-based admin interface (file-based configuration)
+- ❌ No SSL/TLS support
+- ❌ No Let's Encrypt integration
 
 ## Quick Start
 
-1. **Build and run the container:**
+1. **Clone and build:**
    ```bash
-   docker-compose -f docker-compose.local-dev.yml up -d
+   git clone https://github.com/markmonk123/nginx-proxy-manager.git
+   cd nginx-proxy-manager
+   docker compose -f docker-compose.local-dev.yml up -d
    ```
 
 2. **Access the services:**
-   - Reverse Proxy: http://localhost:80
+   - Reverse Proxy: http://localhost
    - Admin Interface: http://localhost:81
-   - Example App (direct): http://localhost:8080 (if example-app service is running)
+   - Test endpoint: http://localhost/test
 
-3. **Test the example proxy:**
+3. **Verify it's working:**
    ```bash
-   # Copy example configuration
-   cp docker/local-dev/example-proxy.conf docker/local-dev/proxy-configs/
-   
-   # Reload nginx
-   docker exec nginx-proxy-local-dev nginx -s reload
-   
-   # Test the proxy
-   curl http://localhost/app
+   curl http://localhost/test
+   # Should return: "Proxy rule is working! This is from /test path"
    ```
 
 ## Configuration
@@ -39,27 +41,42 @@ This is a simplified HTTP-only reverse proxy container for local development env
 ### Adding New Proxy Rules
 
 1. Create a new `.conf` file in `docker/local-dev/proxy-configs/`
-2. Add your server configuration, for example:
+2. Add your server configuration (see examples below)
+3. Reload nginx: `docker exec nginx-proxy-local-dev nginx -s reload`
 
-   ```nginx
-   server {
-       listen 80;
-       server_name myapp.local;
-       
-       location / {
-           proxy_pass http://host.docker.internal:3000;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto http;
-       }
-   }
-   ```
+### Example Configurations
 
-3. Reload nginx configuration:
-   ```bash
-   docker exec nginx-proxy-local-dev nginx -s reload
-   ```
+**Proxy to local development server:**
+```nginx
+server {
+    listen 80;
+    server_name myapp.local;
+    
+    location / {
+        proxy_pass http://host.docker.internal:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto http;
+    }
+}
+```
+
+**Proxy with path prefix:**
+```nginx
+server {
+    listen 80;
+    server_name localhost;
+    
+    location /api/ {
+        proxy_pass http://host.docker.internal:8080/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto http;
+    }
+}
+```
 
 ### Proxying to Host Services
 

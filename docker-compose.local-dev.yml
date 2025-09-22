@@ -15,19 +15,6 @@ services:
       - ENV=development
     networks:
       - proxy-network
-    depends_on:
-      - example-app
-
-# Example target service for testing
-  example-app:
-    image: nginx:alpine
-    container_name: example-app
-    expose:
-      - "80"
-    volumes:
-      - ./docker/local-dev/example-app.html:/usr/share/nginx/html/index.html:ro
-    networks:
-      - proxy-network
 
 networks:
   proxy-network:
