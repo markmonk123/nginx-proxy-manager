@@ -1,0 +1,21 @@
+services:
+  nginx-proxy-local:
+    build:
+      context: .
+      dockerfile: Dockerfile.local-dev
+    container_name: nginx-proxy-local-dev
+    ports:
+      - "80:80"    # HTTP reverse proxy
+      - "81:81"    # Admin interface
+    volumes:
+      - ./docker/local-dev/proxy-configs:/etc/nginx/conf.d/custom:rw
+      - ./logs:/var/log/nginx:rw
+    restart: unless-stopped
+    environment:
+      - ENV=development
+    networks:
+      - proxy-network
+
+networks:
+  proxy-network:
+    driver: bridge
